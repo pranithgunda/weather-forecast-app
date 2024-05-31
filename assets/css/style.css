@@ -1,5 +1,5 @@
 :root {
-    --primary: #7F00FF;
+    --primary: #87CEEB;
     --secondary: #FFFFFF;
     --tertiary:#788585;
     --border-radius: 0.3rem;
@@ -17,7 +17,7 @@ main{
 
 h1,
 h2{
-    font-weight: 700;
+    font-weight: 600;
     margin:0;
     color:var(--dark);
     line-height:1.25;
@@ -80,6 +80,12 @@ h2{
 }
 
 .btn{
+    width:100%;
+    font-size: 1rem;
+    margin:5px 0;
+}
+
+.search-btn{
     font-size: 1.3rem;
     text-decoration: none;
     padding:6px 5px;
@@ -110,7 +116,7 @@ h2{
     border: solid;
     border-color:var(--dark);
     width:90%;
-    height:25%;
+    height:auto;
 
 }
 
@@ -154,4 +160,6 @@ h2{
 }
 }
 
-
+.img{
+    display: inline;
+}
