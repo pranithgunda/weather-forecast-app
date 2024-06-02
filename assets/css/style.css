@@ -4,6 +4,7 @@
     --tertiary:#788585;
     --border-radius: 0.3rem;
     --dark:#000000;
+    --light:#D3d3d3;
 }
 
 * {
@@ -117,7 +118,7 @@ h2{
     border-color:var(--dark);
     width:90%;
     height:auto;
-
+    background-color: var(--light);
 }
 
 .weather-forecast{
