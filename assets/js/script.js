@@ -1,15 +1,15 @@
 // Define global scope variables
 const apiKey = 'a719c6a51c50eef769c8fd900834b224';
-const cityEl = document.getElementById("city");
-const searchButtonEl = document.getElementById("search-btn");
+const cityEl = document.getElementById('city');
+const searchButtonEl = document.querySelector('.search-btn');
 const limit = 1;
 const cnt = 40;
-const searchHistoryContainerEl = document.getElementById("searchhistory-container");
+const searchHistoryContainerEl = document.getElementById('searchhistory-container');
 const units = 'imperial';
 const forecastContainerEl = document.getElementById('forecast-container');
 
 // Function to get Geographical coordinates based on city
-function getGeoCoordinates(event) {
+async function getGeoCoordinates(event) {
     let city = cityEl.value;
     if (city === "") {
         const targetEl = event.target;
@@ -31,7 +31,7 @@ function getGeoCoordinates(event) {
             localStorage.setItem("searchKeyWords", JSON.stringify(searchKeyWords));
         }
         const geoCodeAPIURL = `http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=${limit}&appid=${apiKey}`;
-        fetch(geoCodeAPIURL)
+        await fetch(geoCodeAPIURL)
             .then(function (response) {
                 return response.json()
             })
@@ -55,9 +55,9 @@ function getGeoCoordinates(event) {
     }
 }
 // Function to get current weather info
-function getCurrentWeatherInfo(lat, lon) {
+async function getCurrentWeatherInfo(lat, lon) {
     const currentWeatherInfoURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${units}`;
-    fetch(currentWeatherInfoURL)
+    await fetch(currentWeatherInfoURL)
         .then(function (response) {
             return response.json();
         })
@@ -105,9 +105,9 @@ function displayCurrentWeatherInfo(data) {
     forecastContainerEl.appendChild(currentWeatherEl);
 }
 
-function getWeatherForecastInfo(lat, lon) {
+async function getWeatherForecastInfo(lat, lon) {
     const weatherForecastInfoURL = `http://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${units}&cnt=${cnt}`;
-    fetch(weatherForecastInfoURL)
+    await fetch(weatherForecastInfoURL)
         .then(function (response) {
             return response.json();
         })
@@ -180,6 +180,7 @@ function displaySearchKeyWords(event) {
         }
     }
 }
+
 // Click event listener on search button
 searchButtonEl.addEventListener('click', (event) => {
     event.preventDefault();
