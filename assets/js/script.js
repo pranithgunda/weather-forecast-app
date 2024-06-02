@@ -1,13 +1,15 @@
 // Define global scope variables
 const apiKey = 'a719c6a51c50eef769c8fd900834b224';
 const cityEl = document.getElementById("city");
-const searchButtonEl = document.querySelector(".search-btn");
+const searchButtonEl = document.getElementById("search-btn");
 const limit = 1;
+const cnt = 40;
 const searchHistoryContainerEl = document.getElementById("searchhistory-container");
+const units = 'imperial';
+const forecastContainerEl = document.getElementById('forecast-container');
 
 // Function to get Geographical coordinates based on city
 function getGeoCoordinates(event) {
-    event.preventDefault();
     let city = cityEl.value;
     if (city === "") {
         const targetEl = event.target;
@@ -38,32 +40,32 @@ function getGeoCoordinates(event) {
                     lat = data[i].lat;
                     lon = data[i].lon;
                 }
-                getCurrentWeatherInfo(event,lat, lon);
-
+                // Get current weather info
+                getCurrentWeatherInfo(lat, lon);
+                // Get weather forecast info
+                getWeatherForecastInfo(lat, lon);
+                // Set search keyword to null
+                cityEl.value = "";
+                // Display search history
+                displaySearchKeyWords(event);
             })
             .catch(function (error) {
-                console.log(error.message);
+                window.alert(error.message);
             })
     }
 }
-// Function to get current weather and forecast for 5 days
-function getCurrentWeatherInfo(event,lat,lon) {
-    console.log(event.target);
-    const units = 'imperial';
+// Function to get current weather info
+function getCurrentWeatherInfo(lat, lon) {
     const currentWeatherInfoURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${units}`;
     fetch(currentWeatherInfoURL)
         .then(function (response) {
             return response.json();
         })
         .then(function (data) {
-            let currentWeatherInfo = data;
-            displayCurrentWeatherInfo(currentWeatherInfo);
-            // set search keyword to null
-            cityEl.value = "";
-            displaySearchKeyWords(event);
+            displayCurrentWeatherInfo(data);
         })
         .catch(function (error) {
-            console.log(error.message);
+            window.alert(error.message);
         })
 }
 
@@ -79,9 +81,8 @@ function displayCurrentWeatherInfo(data) {
     const searchDate = new Date(searchUnixTimestamp * 1000);
     // toISOString() method converts a Data Object into a string, using the ISO Standard and format is YYYY-MM-DDTHH:mm:ss:sssZ
     const searchDateString = searchDate.toISOString();
-    const formattedSearchDate = searchDateString.substring(0, 10);
-    // Create div to display current weather information and append to forecast container
-    let forecastContainerEl = document.getElementById('forecast-container');
+    let formattedSearchDate = searchDateString.substring(0, 10);
+    formattedSearchDate = formattedSearchDate.replaceAll("-", "/");
     // Reset the HTML
     forecastContainerEl.innerHTML = "";
     const currentWeatherEl = document.createElement('div');
@@ -97,9 +98,58 @@ function displayCurrentWeatherInfo(data) {
     currentWeatherHeaderEl.appendChild(weatherIcon);
 }
 
+function getWeatherForecastInfo(lat, lon) {
+    const weatherForecastInfoURL = `http://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${units}&cnt=${cnt}`;
+    fetch(weatherForecastInfoURL)
+        .then(function (response) {
+            return response.json();
+        })
+        .then(function (data) {
+            return data.list;
+        })
+        .then(function (list) {
+            displayWeatherForecastInfo(list);
+        })
+        .catch(function (error) {
+            window.alert(error.message);
+        })
+}
+
+function displayWeatherForecastInfo(list) {
+    const forecastHeaderEl = document.createElement('h2');
+    forecastHeaderEl.textContent = '5-Day Forecast:'
+    forecastContainerEl.appendChild(forecastHeaderEl);
+    const weatherForecastEl = document.createElement('div');
+    weatherForecastEl.setAttribute("class", "weather-forecast");
+    for (let i = 0; i < list.length; i += 8) {
+        const forecastDateString = list[i].dt_txt;
+        let forecastDate = forecastDateString.substring(0, 10);
+        forecastDate = forecastDate.replaceAll("-", '/');
+        const forecastWeatherIcon = list[i].weather[0].icon;
+        const forecastWeatherIconSrc = `https://openweathermap.org/img/wn/${forecastWeatherIcon}.png`
+        const forecastTemperature = list[i].main.temp;
+        const forecastWind = list[i].wind.speed;
+        const forecastHumidity = list[i].main.humidity;
+        // Manipulate DOM to display weather forecast information
+        const weatherForecastCard = document.createElement('div');
+        weatherForecastCard.setAttribute("class", "forecast-card");
+        weatherForecastCard.innerHTML = `<div class="card-body">
+                                            <h5>${forecastDate}</h5>
+                                            <img id="forecast-image${i}">
+                                            <p>Temp: ${forecastTemperature}°F</p>
+                                            <p>Wind: ${forecastWind} MPH</p>
+                                            <p>Humidity: ${forecastHumidity}%</p>
+                                         </div>`
+        weatherForecastEl.appendChild(weatherForecastCard);
+        forecastContainerEl.appendChild(weatherForecastEl);
+        const imageEl = document.getElementById(`forecast-image${i}`);
+        imageEl.setAttribute("src", forecastWeatherIconSrc);
+    }
+}
+
 function displaySearchKeyWords(event) {
     const sourceTargetEl = event.target;
-    if(sourceTargetEl.getAttribute("data-keyword") === null){
+    if (sourceTargetEl.getAttribute("data-keyword") === null) {
         let searchKeyWordsArray = {};
         searchKeyWordsArray = JSON.parse(localStorage.getItem("searchKeyWords"));
         if (searchKeyWordsArray) {
@@ -114,7 +164,15 @@ function displaySearchKeyWords(event) {
         }
     }
 }
-searchButtonEl.addEventListener('click', getGeoCoordinates);
-searchHistoryContainerEl.addEventListener('click', getGeoCoordinates);
-
-
+// Click event listener on search button
+searchButtonEl.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    getGeoCoordinates(event);
+});
+// Delegate event listener to search history container
+// searchHistoryContainerEl.addEventListener('click', (event)=>{
+//     event.preventDefault();
+//     event.stopPropagation();
+// getGeoCoordinates();
+// });
