@@ -89,13 +89,20 @@ function displayCurrentWeatherInfo(data) {
     const weatherIcon = document.createElement('img');
     weatherIcon.src = `https://openweathermap.org/img/wn/${currentWeatherIcon}.png`
     currentWeatherEl.setAttribute("class", "weather-primarycard");
-    currentWeatherEl.innerHTML = `<h3 id="header">${cityName} (${formattedSearchDate})</h3>
-                                  <p>Temp: ${currentTemperature}°F</p>
-                                  <p>Wind: ${currentWindSpeed} MPH</p>
-                                  <p>Humidity:${currentHumidity}%</p>`
-    forecastContainerEl.appendChild(currentWeatherEl);
-    const currentWeatherHeaderEl = document.getElementById("header");
+    const currentWeatherHeaderEl = document.createElement('h3');
+    currentWeatherHeaderEl.textContent = `${cityName} (${formattedSearchDate})`;
     currentWeatherHeaderEl.appendChild(weatherIcon);
+    const currentWeatherTempEl = document.createElement('p');
+    currentWeatherTempEl.textContent = `Temp: ${currentTemperature}°F`;
+    const currentWeatherWindEl = document.createElement('p');
+    currentWeatherWindEl.textContent = `Wind: ${currentWindSpeed} MPH`;
+    const currentWeatherHumidEl = document.createElement('p');
+    currentWeatherHumidEl.textContent = `Humidity: ${currentHumidity}%`;
+    currentWeatherEl.appendChild(currentWeatherHeaderEl);
+    currentWeatherEl.appendChild(currentWeatherTempEl);
+    currentWeatherEl.appendChild(currentWeatherWindEl);
+    currentWeatherEl.appendChild(currentWeatherHumidEl);
+    forecastContainerEl.appendChild(currentWeatherEl);
 }
 
 function getWeatherForecastInfo(lat, lon) {
@@ -133,17 +140,26 @@ function displayWeatherForecastInfo(list) {
         // Manipulate DOM to display weather forecast information
         const weatherForecastCard = document.createElement('div');
         weatherForecastCard.setAttribute("class", "forecast-card");
-        weatherForecastCard.innerHTML = `<div class="card-body">
-                                            <h5>${forecastDate}</h5>
-                                            <img id="forecast-image${i}">
-                                            <p>Temp: ${forecastTemperature}°F</p>
-                                            <p>Wind: ${forecastWind} MPH</p>
-                                            <p>Humidity: ${forecastHumidity}%</p>
-                                         </div>`
+        const weatherForecastCardBody = document.createElement('div');
+        weatherForecastCardBody.setAttribute("class", "card-body");
+        const forecastDateEl = document.createElement('h5');
+        forecastDateEl.textContent = `${forecastDate}`;
+        const forecastImgEl = document.createElement('img');
+        forecastImgEl.setAttribute("src", forecastWeatherIconSrc);
+        const forecastTempEl = document.createElement('p');
+        forecastTempEl.textContent = `Temp: ${forecastTemperature}°F`;
+        const forecastWindEl = document.createElement('p');
+        forecastWindEl.textContent = `Wind: ${forecastWind} MPH`;
+        const forecastHumidEl = document.createElement('p');
+        forecastHumidEl.textContent = `Humidity: ${forecastHumidity}%`;
+        weatherForecastCardBody.appendChild(forecastDateEl);
+        weatherForecastCardBody.appendChild(forecastImgEl);
+        weatherForecastCardBody.appendChild(forecastTempEl);
+        weatherForecastCardBody.appendChild(forecastWindEl);
+        weatherForecastCardBody.appendChild(forecastHumidEl);
+        weatherForecastCard.appendChild(weatherForecastCardBody);
         weatherForecastEl.appendChild(weatherForecastCard);
         forecastContainerEl.appendChild(weatherForecastEl);
-        const imageEl = document.getElementById(`forecast-image${i}`);
-        imageEl.setAttribute("src", forecastWeatherIconSrc);
     }
 }
 
@@ -171,8 +187,8 @@ searchButtonEl.addEventListener('click', (event) => {
     getGeoCoordinates(event);
 });
 // Delegate event listener to search history container
-// searchHistoryContainerEl.addEventListener('click', (event)=>{
-//     event.preventDefault();
-//     event.stopPropagation();
-// getGeoCoordinates();
-// });
+searchHistoryContainerEl.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    getGeoCoordinates(event);
+});
