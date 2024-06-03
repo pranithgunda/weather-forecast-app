@@ -7,17 +7,15 @@ let lat = "";
 let lon = "";
 const cityEl = document.getElementById('city');
 const searchButtonEl = document.querySelector('.search-btn');
-const forecastContainerEl = document.getElementById('forecast-container');
-const currentWeatherContainerEl = document.getElementById("current-weather");
-const forecastWeatherContainerEl = document.getElementById("forecast-weather");
+const currentAndForecastWeatherContainerEl = document.getElementById('current-forecast-weather-container');
 const searchHistoryContainerEl = document.getElementById('searchhistory-container');
 
 // Function to get Geographical coordinates based on city
 async function getGeoCoordinates(event) {
-    console.log('function 1 getGeoCoordinates');
     let city = cityEl.value;
     if (city === "") {
         const targetEl = event.target;
+        // Get city if function is invoked from search history button
         city = targetEl.getAttribute("data-keyword");
     }
     // Reset coordinates
@@ -35,6 +33,7 @@ async function getGeoCoordinates(event) {
             searchKeyWords.push(searchKeyWord);
             localStorage.setItem("searchKeyWords", JSON.stringify(searchKeyWords));
         }
+        // Get geographical coordinates based on city
         const geoCodeAPIURL = `http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=${limit}&appid=${apiKey}`;
         await fetch(geoCodeAPIURL)
             .then(function (response) {
@@ -46,7 +45,7 @@ async function getGeoCoordinates(event) {
                     lon = data[i].lon;
                 }
                 // Get current weather info
-                getCurrentWeatherInfo(event,lat, lon);
+                getCurrentWeatherInfo(event, lat, lon);
                 // Set search keyword to null
                 cityEl.value = "";
             })
@@ -57,13 +56,13 @@ async function getGeoCoordinates(event) {
 }
 // Function to get current weather info
 async function getCurrentWeatherInfo(event, lat, lon) {
-    console.log('function 2 getCurrentWeatherInfo')
     const currentWeatherInfoURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${units}`;
     await fetch(currentWeatherInfoURL)
         .then(function (response) {
             return response.json();
         })
         .then(function (data) {
+            // Call function to display current weather information
             displayCurrentWeatherInfo(event, lat, lon, data);
         })
         .catch(function (error) {
@@ -72,7 +71,6 @@ async function getCurrentWeatherInfo(event, lat, lon) {
 }
 
 function displayCurrentWeatherInfo(event, lat, lon, data) {
-    console.log('function 3 displayCurrentWeatherInfo')
     // Get current weather information
     const currentTemperature = data.main.temp;
     const currentHumidity = data.main.humidity;
@@ -81,22 +79,19 @@ function displayCurrentWeatherInfo(event, lat, lon, data) {
     const cityName = data.name;
     const searchUnixTimestamp = data.dt;
     // convert timestamp to milliseconds and construct Date object
-    const searchDate = new Date(searchUnixTimestamp * 1000);
-    // toISOString() method converts a Data Object into a string, using the ISO Standard and format is YYYY-MM-DDTHH:mm:ss:sssZ
-    const searchDateString = searchDate.toISOString();
-    let formattedSearchDate = searchDateString.substring(0, 10);
-    formattedSearchDate = formattedSearchDate.replaceAll("-", "/");
+    let searchDate = new Date(searchUnixTimestamp * 1000);
+    // returns date of a date object as a string using locale conventions
+    searchDate = searchDate.toLocaleDateString('en-US');
     // Reset the HTML
-    forecastContainerEl.innerHTML = "";
-    currentWeatherContainerEl.innerHTML = "";
-    forecastWeatherContainerEl.innerHTML="";
+    currentAndForecastWeatherContainerEl.innerHTML = "";
+    // Build HTML to display current weather info
     const currentWeatherEl = document.createElement('div');
     currentWeatherEl.setAttribute("class", "weather-primarycard");
     const weatherIcon = document.createElement('img');
-    weatherIcon.src = `https://openweathermap.org/img/wn/${currentWeatherIcon}.png`
+    weatherIcon.setAttribute("src",`https://openweathermap.org/img/wn/${currentWeatherIcon}.png`)
     currentWeatherEl.setAttribute("class", "weather-primarycard");
     const currentWeatherHeaderEl = document.createElement('h3');
-    currentWeatherHeaderEl.textContent = `${cityName} (${formattedSearchDate})`;
+    currentWeatherHeaderEl.textContent = `${cityName} (${searchDate})`;
     currentWeatherHeaderEl.appendChild(weatherIcon);
     const currentWeatherTempEl = document.createElement('p');
     currentWeatherTempEl.textContent = `Temp: ${currentTemperature}°F`;
@@ -108,14 +103,12 @@ function displayCurrentWeatherInfo(event, lat, lon, data) {
     currentWeatherEl.appendChild(currentWeatherTempEl);
     currentWeatherEl.appendChild(currentWeatherWindEl);
     currentWeatherEl.appendChild(currentWeatherHumidEl);
-    currentWeatherContainerEl.appendChild(currentWeatherEl);
-    forecastContainerEl.appendChild(currentWeatherContainerEl);
+    currentAndForecastWeatherContainerEl.appendChild(currentWeatherEl);
     // Call function to get weather forecast info
-    getWeatherForecastInfo(event,lat, lon);
+    getWeatherForecastInfo(event, lat, lon);
 }
 
-async function getWeatherForecastInfo(event,lat, lon) {
-    console.log('function 4 getWeatherForecastInfo');
+async function getWeatherForecastInfo(event, lat, lon) {
     const weatherForecastInfoURL = `http://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${units}&cnt=${cnt}`;
     await fetch(weatherForecastInfoURL)
         .then(function (response) {
@@ -125,29 +118,29 @@ async function getWeatherForecastInfo(event,lat, lon) {
             return data.list;
         })
         .then(function (list) {
-            displayWeatherForecastInfo(event,list);
+            // call function to display weather forecast info
+            displayWeatherForecastInfo(event, list);
         })
         .catch(function (error) {
             window.alert(error.message);
         })
 }
 
-function displayWeatherForecastInfo(event,list) {
-    console.log('function 5 displayWeatherForecastInfo');
+function displayWeatherForecastInfo(event, list) {
     const forecastHeaderEl = document.createElement('h2');
     forecastHeaderEl.textContent = '5-Day Forecast:'
-    forecastContainerEl.appendChild(forecastHeaderEl);
+    currentAndForecastWeatherContainerEl.appendChild(forecastHeaderEl);
     const weatherForecastEl = document.createElement('div');
     weatherForecastEl.setAttribute("class", "weather-forecast");
     for (let i = 0; i < list.length; i += 8) {
-        const forecastDateString = list[i].dt_txt;
-        let forecastDate = forecastDateString.substring(0, 10);
-        forecastDate = forecastDate.replaceAll("-", '/');
+        const forecastUnixTimestamp = list[i].dt;
+        let forecastDate =  new  Date(forecastUnixTimestamp*1000);
+        forecastDate = forecastDate.toLocaleDateString('en-US');
         const forecastWeatherIcon = list[i].weather[0].icon;
         const forecastWeatherIconSrc = `https://openweathermap.org/img/wn/${forecastWeatherIcon}.png`
         const forecastTemperature = list[i].main.temp;
         const forecastWind = list[i].wind.speed;
-        const forecastHumidity = list[i].main.humidity;
+        const forecastHumid = list[i].main.humidity;
         // Manipulate DOM to display weather forecast information
         const weatherForecastCard = document.createElement('div');
         weatherForecastCard.setAttribute("class", "forecast-card");
@@ -161,31 +154,32 @@ function displayWeatherForecastInfo(event,list) {
         forecastTempEl.textContent = `Temp: ${forecastTemperature}°F`;
         const forecastWindEl = document.createElement('p');
         forecastWindEl.textContent = `Wind: ${forecastWind} MPH`;
-        const forecastHumidityEl = document.createElement('p');
-        forecastHumidityEl.textContent = `Humidity: ${forecastHumidity}%`;
+        const forecastHumidEl = document.createElement('p');
+        forecastHumidEl.textContent = `Humidity: ${forecastHumid}%`;
         weatherForecastCardBody.appendChild(forecastDateEl);
         weatherForecastCardBody.appendChild(forecastImgEl);
         weatherForecastCardBody.appendChild(forecastTempEl);
         weatherForecastCardBody.appendChild(forecastWindEl);
-        weatherForecastCardBody.appendChild(forecastHumidityEl);
+        weatherForecastCardBody.appendChild(forecastHumidEl);
         weatherForecastCard.appendChild(weatherForecastCardBody);
         weatherForecastEl.appendChild(weatherForecastCard);
-        forecastWeatherContainerEl.appendChild(weatherForecastEl);
-        forecastContainerEl.appendChild(weatherForecastEl);
+        currentAndForecastWeatherContainerEl.appendChild(weatherForecastEl);
     }
     // Call function to display search history
     displaySearchKeyWords(event);
 }
 
 function displaySearchKeyWords(event) {
-    console.log('function 6 displaySearchKeyWords');
+    // Get the target element from event
     const sourceTargetEl = event.target;
     if (sourceTargetEl.getAttribute("data-keyword") === null) {
         let searchKeyWordsArray = {};
+        // Get the search keywords array from local storage to build search history
         searchKeyWordsArray = JSON.parse(localStorage.getItem("searchKeyWords"));
         if (searchKeyWordsArray) {
             const arrayLength = searchKeyWordsArray.length;
             const keyWord = searchKeyWordsArray[arrayLength - 1].keyWord;
+            // Manipulate DOM to display search history
             const buttonEl = document.createElement('button');
             buttonEl.setAttribute("type", "button");
             buttonEl.setAttribute("class", "btn btn-secondary");
