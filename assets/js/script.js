@@ -1,23 +1,28 @@
 // Define global scope variables
 const apiKey = 'a719c6a51c50eef769c8fd900834b224';
-const cityEl = document.getElementById('city');
-const searchButtonEl = document.querySelector('.search-btn');
 const limit = 1;
 const cnt = 40;
-const searchHistoryContainerEl = document.getElementById('searchhistory-container');
 const units = 'imperial';
+let lat = "";
+let lon = "";
+const cityEl = document.getElementById('city');
+const searchButtonEl = document.querySelector('.search-btn');
 const forecastContainerEl = document.getElementById('forecast-container');
+const currentWeatherContainerEl = document.getElementById("current-weather");
+const forecastWeatherContainerEl = document.getElementById("forecast-weather");
+const searchHistoryContainerEl = document.getElementById('searchhistory-container');
 
 // Function to get Geographical coordinates based on city
 async function getGeoCoordinates(event) {
+    console.log('function 1 getGeoCoordinates');
     let city = cityEl.value;
     if (city === "") {
         const targetEl = event.target;
         city = targetEl.getAttribute("data-keyword");
     }
-    // Define coordinates
-    let lat = "";
-    let lon = "";
+    // Reset coordinates
+    lat = "";
+    lon = "";
     if (city !== "") {
         searchKeyWords = JSON.parse(localStorage.getItem("searchKeyWords"));
         if (searchKeyWords) {
@@ -41,13 +46,9 @@ async function getGeoCoordinates(event) {
                     lon = data[i].lon;
                 }
                 // Get current weather info
-                getCurrentWeatherInfo(lat, lon);
-                // Get weather forecast info
-                getWeatherForecastInfo(lat, lon);
+                getCurrentWeatherInfo(event,lat, lon);
                 // Set search keyword to null
                 cityEl.value = "";
-                // Display search history
-                displaySearchKeyWords(event);
             })
             .catch(function (error) {
                 window.alert(error.message);
@@ -55,21 +56,23 @@ async function getGeoCoordinates(event) {
     }
 }
 // Function to get current weather info
-async function getCurrentWeatherInfo(lat, lon) {
+async function getCurrentWeatherInfo(event, lat, lon) {
+    console.log('function 2 getCurrentWeatherInfo')
     const currentWeatherInfoURL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${units}`;
     await fetch(currentWeatherInfoURL)
         .then(function (response) {
             return response.json();
         })
         .then(function (data) {
-            displayCurrentWeatherInfo(data);
+            displayCurrentWeatherInfo(event, lat, lon, data);
         })
         .catch(function (error) {
             window.alert(error.message);
         })
 }
 
-function displayCurrentWeatherInfo(data) {
+function displayCurrentWeatherInfo(event, lat, lon, data) {
+    console.log('function 3 displayCurrentWeatherInfo')
     // Get current weather information
     const currentTemperature = data.main.temp;
     const currentHumidity = data.main.humidity;
@@ -85,7 +88,10 @@ function displayCurrentWeatherInfo(data) {
     formattedSearchDate = formattedSearchDate.replaceAll("-", "/");
     // Reset the HTML
     forecastContainerEl.innerHTML = "";
+    currentWeatherContainerEl.innerHTML = "";
+    forecastWeatherContainerEl.innerHTML="";
     const currentWeatherEl = document.createElement('div');
+    currentWeatherEl.setAttribute("class", "weather-primarycard");
     const weatherIcon = document.createElement('img');
     weatherIcon.src = `https://openweathermap.org/img/wn/${currentWeatherIcon}.png`
     currentWeatherEl.setAttribute("class", "weather-primarycard");
@@ -102,10 +108,14 @@ function displayCurrentWeatherInfo(data) {
     currentWeatherEl.appendChild(currentWeatherTempEl);
     currentWeatherEl.appendChild(currentWeatherWindEl);
     currentWeatherEl.appendChild(currentWeatherHumidEl);
-    forecastContainerEl.appendChild(currentWeatherEl);
+    currentWeatherContainerEl.appendChild(currentWeatherEl);
+    forecastContainerEl.appendChild(currentWeatherContainerEl);
+    // Call function to get weather forecast info
+    getWeatherForecastInfo(event,lat, lon);
 }
 
-async function getWeatherForecastInfo(lat, lon) {
+async function getWeatherForecastInfo(event,lat, lon) {
+    console.log('function 4 getWeatherForecastInfo');
     const weatherForecastInfoURL = `http://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${units}&cnt=${cnt}`;
     await fetch(weatherForecastInfoURL)
         .then(function (response) {
@@ -115,14 +125,15 @@ async function getWeatherForecastInfo(lat, lon) {
             return data.list;
         })
         .then(function (list) {
-            displayWeatherForecastInfo(list);
+            displayWeatherForecastInfo(event,list);
         })
         .catch(function (error) {
             window.alert(error.message);
         })
 }
 
-function displayWeatherForecastInfo(list) {
+function displayWeatherForecastInfo(event,list) {
+    console.log('function 5 displayWeatherForecastInfo');
     const forecastHeaderEl = document.createElement('h2');
     forecastHeaderEl.textContent = '5-Day Forecast:'
     forecastContainerEl.appendChild(forecastHeaderEl);
@@ -150,20 +161,24 @@ function displayWeatherForecastInfo(list) {
         forecastTempEl.textContent = `Temp: ${forecastTemperature}°F`;
         const forecastWindEl = document.createElement('p');
         forecastWindEl.textContent = `Wind: ${forecastWind} MPH`;
-        const forecastHumidEl = document.createElement('p');
-        forecastHumidEl.textContent = `Humidity: ${forecastHumidity}%`;
+        const forecastHumidityEl = document.createElement('p');
+        forecastHumidityEl.textContent = `Humidity: ${forecastHumidity}%`;
         weatherForecastCardBody.appendChild(forecastDateEl);
         weatherForecastCardBody.appendChild(forecastImgEl);
         weatherForecastCardBody.appendChild(forecastTempEl);
         weatherForecastCardBody.appendChild(forecastWindEl);
-        weatherForecastCardBody.appendChild(forecastHumidEl);
+        weatherForecastCardBody.appendChild(forecastHumidityEl);
         weatherForecastCard.appendChild(weatherForecastCardBody);
         weatherForecastEl.appendChild(weatherForecastCard);
+        forecastWeatherContainerEl.appendChild(weatherForecastEl);
         forecastContainerEl.appendChild(weatherForecastEl);
     }
+    // Call function to display search history
+    displaySearchKeyWords(event);
 }
 
 function displaySearchKeyWords(event) {
+    console.log('function 6 displaySearchKeyWords');
     const sourceTargetEl = event.target;
     if (sourceTargetEl.getAttribute("data-keyword") === null) {
         let searchKeyWordsArray = {};
