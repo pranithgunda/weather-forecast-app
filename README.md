@@ -17,4 +17,4 @@ The application also displays the cities the user searched for weather informati
 
 ## Link to Deployed Site
 
-coming soon
+https://pranithgunda.github.io/weather-forecast-app/

@@ -34,7 +34,7 @@ async function getGeoCoordinates(event) {
             localStorage.setItem("searchKeyWords", JSON.stringify(searchKeyWords));
         }
         // Get geographical coordinates based on city
-        const geoCodeAPIURL = `http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=${limit}&appid=${apiKey}`;
+        const geoCodeAPIURL = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=${limit}&appid=${apiKey}`;
         await fetch(geoCodeAPIURL)
             .then(function (response) {
                 return response.json()
@@ -109,7 +109,7 @@ function displayCurrentWeatherInfo(event, lat, lon, data) {
 }
 
 async function getWeatherForecastInfo(event, lat, lon) {
-    const weatherForecastInfoURL = `http://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${units}&cnt=${cnt}`;
+    const weatherForecastInfoURL = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${units}&cnt=${cnt}`;
     await fetch(weatherForecastInfoURL)
         .then(function (response) {
             return response.json();
